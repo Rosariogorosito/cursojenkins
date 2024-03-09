@@ -1,5 +1,5 @@
 node {
-    def server = Artifactory.server('https://rosario172.jfrog.io/.jfrog.io')
+    def server = Artifactory.server('rosario172.jfrog.io/.jfrog.io')
     def rtGradle = Artifactory.newGradleBuild()
     def buildInfo = Artifactory.newBuildInfo()
     
