@@ -1,5 +1,5 @@
 node {
-    def server = Artifactory.server('rosario172.jfrog.io')
+    def server = Artifactory.server('https://rosario172.jfrog.io/.jfrog.io')
     def rtGradle = Artifactory.newGradleBuild()
     def buildInfo = Artifactory.newBuildInfo()
     
@@ -20,7 +20,7 @@ node {
             rtGradle.usesPlugin = true // El plugin ya está definifo en el build script
         }
         stage('Ejecutar Gradle') {
-            rtGradle.run rootDir: "Artifactory/", tasks: 'clean artifactoryPublish', buildInfo: buildInfo
+            rtGradle.run rootDir: "artifactory/", tasks: 'clean artifactoryPublish', buildInfo: buildInfo
         }
         stage('Publicar buildInfo') {
             server.publishBuildInfo buildInfo
