@@ -1,40 +1,28 @@
-pipeline {
-    agent any
-    environment {
-        ARTIFACTORY_SERVER = 'rosario172.jfrog.io'
-    }
-    stages {
-        stage('Build') {
-            steps {
-                script {
-                    def server = Artifactory.server(env.ARTIFACTORY_SERVER)
-                    def rtGradle = Artifactory.newGradleBuild()
-                    def buildInfo = Artifactory.newBuildInfo()
+node {
+    def server = Artifactory.server('rosario172.jfrog.io')
+    def rtGradle = Artifactory.newGradleBuild()
+    def buildInfo = Artifactory.newBuildInfo()
+    
+    stage 'Complicacion/Build'
+        git branch: 'main', url: 'https://github.com/Rosariogorosito/gs-gradle.git'
 
-                    git branch: 'main', url: 'https://github.com/Rosariogorosito/gs-gradle.git'
+    stage 'Configuracion Artifactory'
+        rtGradle.tool = 'gradle' // Como le asignamos al nombre de la herramienta en Jenkins en configuración
+        rtGradle.deployer repo:'default-gradle-dev-local',  server: server
+        rtGradle.resolver repo:'default-gradle-dev', server: server
 
-                    rtGradle.tool = 'gradle'
-                    rtGradle.deployer repo: 'default-gradle-dev-local', server: server
-                    rtGradle.resolver repo: 'default-gradle-dev', server: server
-
-                    stage('Configure buildInfo') {
-                        buildInfo.env.capture = true
-                        buildInfo.env.filter.addInclude("*")
-                    }
-
-                    stage('Additional Gradle Configurations') {
-                        rtGradle.usesPlugin = true
-                    }
-
-                    stage('Execute Gradle') {
-                        rtGradle.run rootDir: "artifactory/", tasks: 'clean artifactoryPublish', buildInfo: buildInfo
-                    }
-
-                    stage('Publish buildInfo') {
-                        server.publishBuildInfo buildInfo
-                    }
-                }
-            }
+        stage('Configuracion buildInfo') {
+            buildInfo.env.capture = true
+            buildInfo.env.filter.addInclude("*")
         }
-    }
+
+        stage('Configuraciones extra de gradle') {
+            rtGradle.usesPlugin = true // El plugin ya está definifo en el build script
+        }
+        stage('Ejecutar Gradle') {
+            rtGradle.run rootDir: "artifactory/", tasks: 'clean artifactoryPublish', buildInfo: buildInfo
+        }
+        stage('Publicar buildInfo') {
+            server.publishBuildInfo buildInfo
+        }
 }
